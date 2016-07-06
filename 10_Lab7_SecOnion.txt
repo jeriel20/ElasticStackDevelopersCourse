@@ -1,0 +1,133 @@
+===--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LAB 7 - SECONION
+=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-
+-------------------------------------------------------
+HOW TO INSTALL Security Onion StandAlone Server
+-------------------------------------------------------
+Boot the ISO
+select the "install security onion"
+select language and then click continue
+select continue
+select continue "erase disk and install security onion"
+select the drive and select install now
+***if you want to customize the partitions and the hard drive feel free
+select continue for new york because later we will set time to UTC
+select your language and continue
+create you computer name and etc then click continue
+select restart now
+At this point you have install the OS on to hardware
+
+-------------------------------------------------------
+configure interfaces
+-------------------------------------------------------
+after reboot...
+double-click "setup"
+enter the password you created
+select continue
+select yes to continue
+select yes configure interfaces
+**in this scenario we will only be setting up 1 sniffing interface and 1 management interface
+select eth0 and use static or DHCP for your management Interface
+**in this case we will be doing static
+enter IP address
+enter your netmask
+enter your DNS
+enter the domain
+select "yes configure monitor intefaces"
+select eth1 and select okay
+select yes to make changes
+select yes to reboot
+
+-------------------------------------------------------
+Installing Snort, Bro etc..
+-------------------------------------------------------
+double-click on setup
+enter password
+select yes
+select yes to skip network interface configuration
+select advanced and okay
+select stand alone
+select yes to enable Snorby
+enter fake email address example@example.local (you will need to remember this in order to use Snorby)
+enter your squil username to "student"
+enter your password as "password"
+re-enter your password as "password"
+select enter for the 30 days
+select enter for the 7 days
+select snort and hit okay
+select emerging threats GPL and select okay
+leave the pf ring at 4096, select okay
+ensure eth1 is selected and select okay
+select yes to enable the IDS engine
+select 1 for the cores and continue
+select yes to install bro
+select yes to enable file extraction for bro and continue
+select 1 core and continue
+select NO for "http agent"
+select NO for "Argus"
+selec NO for "Prads"
+select YES for enable full packet capture
+leave at 150mb and continue
+select yes for mmap i/o
+set you pcap ring buffer to 1024 and continue
+90% for disk space is good. select continue
+select NO for enabling salt
+select YES to enable ELSA
+leave default value for disk space and continue
+select YES to proceed with changes
+
+After install open terminal and type sudo service nsm status to verify all the instances and 
+processes started okay. You are not good to go. this is a very basic install for Security Onion
+For more advanced setup google, you-tube, git-hub, etc is your BFF. or you can ask me and I will
+tell you what I know.
+
+-------------------------------------------------------
+Update your SO
+-------------------------------------------------------
+# do not do APT-GET update .. because SO is pick and needs to update stuff in a specific order
+# So use the script that was made for updating SO
+	sudo soup
+
+-------------------------------------------------------
+Using TCPreplay to replay PCAPS
+-------------------------------------------------------
+sudo tcpreplay -i eth1 -M10 /opt/samples/markofu/*
+
+-------------------------------------------------------
+Configure snort.conf
+-------------------------------------------------------
+# open snort.conf and configure to your liking
+ 	sudo nano /etc/nsm/nameOfYourComputerETH1/snort.conf
+
+#restart snort
+	sudo nsm_sensor_ps-restart --only-snort
+
+-------------------------------------------------------
+Configure BRO
+-------------------------------------------------------
+#add IP address space as appropriate
+	sudo nano /opt/bro/etc/networks.cfg
+
+#restart BRO
+	sudo nsm_sensor_ps-restart --only-bro
+
+
+-------------------------------------------------------
+Modify the Firewall
+-------------------------------------------------------
+#security onion is Ubuntu so I would recommed your modify the host firewall uses UFW
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

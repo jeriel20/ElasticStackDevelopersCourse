@@ -1,0 +1,174 @@
+===--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LAB 4 - WINDOWS DOMAIN
+=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-
+-------------------------------------------------------------
+How to install Windows Server 2008R2 Domain Controller
+-------------------------------------------------------------
+Login to your Server
+administrator
+PA$$word0123456
+start
+administrative tools
+server manager
+-------------------------------------------------------------
+Install Active Directory
+-------------------------------------------------------------
+select roles
+select add roles (it will take you to a wizard)
+select next
+select "Active Directory Lightweight Directory"
+select "add required features"
+select next
+select next
+select install
+select close
+-------------------------------------------------------------
+Install Active Directory Domain Services
+-------------------------------------------------------------
+select roles
+select add roles (it will take you to a wizard)
+select next
+select "Active Directory Domain Services"
+select next
+select next
+select install
+
+open a command prompt
+#type 
+dcpromo.exe
+select next
+select next
+select "create a new domain in a new forest"
+select next
+enter your new FQDN: example.net
+select next
+select the down arrow and select "Windows Server 2008 R2"
+select next
+make sure that the DNS server option is selected/check in the box
+select next
+select "YES"
+leave defaults and select next
+logging on after reboot will prompt you to change your password
+change your password to PA$$word01234567
+
+enter the password PA$$word0123456 and select next
+select finish and restart now
+
+-------------------------------------------------------------
+Configure DNS SERVER
+-------------------------------------------------------------
+start
+administrative tools
+DNS
+select the DNS server with the little icon with a computer 
+right click on it now
+select properties
+select Forwarders
+select Edit
+enter the DNS we will be using which is 172.16.0.100
+select okay
+select apply
+select okay
+close 
+
+-------------------------------------------------------------
+Create a New GPO and a new OU
+-------------------------------------------------------------
+start
+administrative tools
+group policy management
+open your forest tree menu
+right click on your FQDN and select new organization unit
+name it whatever you want: labtest
+right click on the FQDN and select "create a GPO in this Domain..."
+Name your new GPO "Forward Events"
+select okay
+close the GPO window
+
+
+now...go to 
+start
+administrative tools
+"Active Directory Users and Computers"
+Expand you forest tree
+select and right click on the new OU you created
+select new -> computer
+name it "station1" and select okay
+close the wizard
+
+-------------------------------------------------------------
+JOIN Windows 7 host to the Domian
+-------------------------------------------------------------
+{configure adapter settings}
+go to the Windows 7 box and loggin with admin creds locally
+select the start menu
+select control panel
+select "network and Internet"
+select "network and sharing center"
+select "change adapter settings"
+right click on local area connection 2 and select properties
+highlight by selecting the IPV4 TCP/IP
+then select properties button
+set your Preffered DNS Server to your DC
+set your alternate DNS Server to 172.16.0.100
+select okay
+select close
+right click on local area connection and disable
+rigth click on local area connection and enable
+
+{adding the Computer into the Domain}
+go to the Windows 7 box and loggin with admin creds locally
+select the start menu
+right click on computer
+select properties
+in the "computer name, domain, and workgroup settings"
+select "change setting"
+select change next to the "to rename this computer or change its domain or workgroup..etc"
+Under the "Member of Section" select Domain in the radial button
+type in the domain name and select okay
+it will then prompt you for username password
+enter the the DOMAIN admin username and password
+when successful it will show a window saying "Welcome to the XXX domain"
+select okay 3 times
+Restart your computer [it will prompt you to do so]
+
+{add the computer to the OU you created earlier}
+go to your DC and loggon
+select start
+administrative tools
+"Active Directory Users and Computers"
+Expand you forest tree
+select the computers folder
+the computer you just added will be there
+select and right click on that computer and select "move"
+selec the name of the OU you built earlier and select okay
+navigate to that folder to verify that it was placed in there
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,84 @@
+===--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LAB 5 - NXLOG
+=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-
+---------------------------------------------------------------------------------------------
+Installing and Configuring NXLOG
+---------------------------------------------------------------------------------------------
+Ensure that you are on the host that you will use as the collector. 
+Ensure this host has been setup as the collector with the provided instructions.
+
+double-click on NXLOG executable {you can download the executable from http://nxlog-ce.sourceforge.net/download}
+select run
+accept terms
+select install
+open computer
+go to c:\ drive
+navigate to c:\program Files x86\nxlog\conf
+open the nxlog.conf file with notepad
+copy and paste the contents of the nxlog.conf file that was supplied to you
+ensure that the IP and port at the bottom of this file is updated
+ensure that at the top, the root variable matches the correct path of nxlog
+
+Below is a copy of what should be in the nxlog.conf
+
+Save the file {if you have issues saving; check the permission on the file and adjust where necessary}
+-----------------------------------------------------------------------
+EDIT the Service to start NXLOG and to set to start automatically
+-------------------------------------------------------------------
+that a RUN prompt
+enter "services.msc"
+scroll down and find the nxlog service
+double click
+ensure that the startup type is set to automatic
+then select the "start" button
+select okay
+[if you get an error, you may have made a mistake in the conf file; go the log file and see what the issue is; the
+log file is located at c:\program Files x86\nxlog\data\nxlog.log
+
+Now got to elk to verify that logs are being sent to it.
+
+##--------NXLOG.CONF--------------------------------------------------------------------------
+## Please set the ROOT to the folder your nxlog was installed into,
+## otherwise it will not start.
+  
+#define ROOT C:\Program Files\nxlog
+define ROOT C:\Program Files (x86)\nxlog
+  
+Moduledir %ROOT%\modules
+CacheDir %ROOT%\data
+Pidfile %ROOT%\data\nxlog.pid
+SpoolDir %ROOT%\data
+LogFile %ROOT%\data\nxlog.log
+  
+<Extension json>
+    Module      xm_json
+</Extension>
+  
+# Nxlog internal logs
+<Input internal>
+   Module im_internal
+   Exec $EventReceivedTime = integer($EventReceivedTime) / 1000000; to_json();
+</Input>
+  
+ 
+# Windows Event Log
+<Input eventlog>
+# Uncomment im_msvistalog for Windows Vista/2008 and later 
+   Module im_msvistalog
+  
+# Uncomment im_mseventlog for Windows XP/2000/2003
+#   Module im_mseventlog
+ 
+   Exec $EventReceivedTime = integer($EventReceivedTime) / 1000000; to_json();
+</Input>
+ 
+<Output out>
+   Module om_tcp
+   Host 172.16.228.151
+   Port 3515
+</Output>
+ 
+<Route 1>
+   Path internal, eventlog => out
+</Route>
+##--------NXLOG.CONF--------------------------------------------------------------------------

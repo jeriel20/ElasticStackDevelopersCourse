@@ -1,0 +1,37 @@
+===--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LAB 3 - KIBANA
+=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-
+
+-----------------------------------------------------------------------
+Kibana
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+Setting up Kibana after recieving Data for the FIRST time
+---------------------------------------------------------------------
+# open your browser and go to your kibana
+	https://localhost
+
+# you will see a page that states "configure an index pattern"
+# configure your index pattern by setting the Time-field name
+# select the down arrow to the right and select
+	@timestamp
+# select the green button "Create"
+
+# this will index your data based off of the timestamp
+
+# now select the orange refesh button at the top of the screen. this 
+# refreshed the index and allows you search the index
+
+# select the Discover tab at the top. you will now see the data
+
+# Watch video for further understanding of how to use Kibana
+
+https://www.elastic.co/webinars/getting-started-with-kibana
+
+
+-------------------------------------------------------------------------
+Exercise
+------------------------------------------------------------------------
+Build a custom search and save the template
+Build 3 visualizations
+Build 1 dashboard

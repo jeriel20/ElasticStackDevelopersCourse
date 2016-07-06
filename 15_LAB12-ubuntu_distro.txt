@@ -1,0 +1,23 @@
+=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-
+LAB 11 - CURATOR
+=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-
+------------------------------------------------------
+CURATOR
+----------------------------------------------------
+# Go to this webpage to learn how to use curator
+https://www.elastic.co/guide/en/elasticsearch/client/curator/current/examples.html
+
+# curator is used to manage the elasticsearch database. It manages when, what, where to delete
+# indexes based on time, disk space, etc.
+
+# Example 1: shows indices with timestrings
+	curator --host 127.0.0.1 show indices --timestring '%Y.%m.%d'
+
+# Example 2: delete all indices older than 30 days
+	curator --host 127.0.0.1 delete indices --older-than 30 --time-unit days \ --timestring '%Y.%m.%d'
+
+# Example 3 deleting indices based off of disk consumption:
+read from this site
+https://www.elastic.co/guide/en/elasticsearch/client/curator/current/delete.html
+
+	curator --host 127.0.0.1 delete --disk-space 1024 indices <<index selection parameters>>

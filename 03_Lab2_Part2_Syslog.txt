@@ -1,0 +1,24 @@
+===--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LAB 2 - CONFIGURING RSYSLOG
+=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-
+------------------------------------------------
+SYSLOG
+------------------------------------------------
+#go to the Linux host Ubuntu
+#In order to send syslog to a remote host go the rsyslog.conf
+	sudo nano /etc/rsyslog.conf
+# add the following to the conf for tcp (this will send all logs defined in Rsyslog)
+	*.* @@192.168.1.93:5000
+
+# add the following to the conf for udp
+	*.* @192.168.1.93:5000
+
+# to only send specific log file
+	*/var/log/messages* @@<ipaddress>:<port>
+
+# save and restart syslog
+	sudo service rsyslog restart
+or
+	sudo systemctl restart rsyslog.service
+#for syslog-ng
+	sudo service syslog restart

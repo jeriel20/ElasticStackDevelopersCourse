@@ -1,0 +1,36 @@
+===--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LAB 8 - BRO LOGS
+=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-
+--------------------------------------------------------------------------------------
+Setup filters in ELK for BRO LOGS
+-------------------------------------------------------------------------------------
+# verify filters are good to go
+# location of bro logs is
+	/etc/logstash/policy/Bro_logs/
+
+# notice that the input port is 5514 {change it if you want}
+
+#stop the logstash service
+	service logstash stop
+
+# symbolically link all the conf files to the conf.d directory
+	ln -s /etc/logstash/policy/Bro_logs/* /etc/logstash/conf.d
+
+# if the additional_stuff folder is lnked make sure to delete it from the conf.d directory
+	rm -rf /etc/logstash/conf.d/additonal_stuff
+
+# config test the conf.d directory for any errors
+	/opt/logstash/bin/logstash -f /etc/logstash/conf.d/ -v --configtest
+
+# if all is good then start the service
+	service logstash start
+	service logstash status
+
+# verify socket is open
+	netstat -plunt | grep java
+
+# use tcpdump to verify packets are comming in
+	tcpdump -nnvvvi enp0s3 port 5514
+
+# Go to the security Onion and generate some logs using tcpreplay. pcaps are in the /opt/samples directory	
+	tcpreplay 

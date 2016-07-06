@@ -1,0 +1,40 @@
+===--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LAB 6 - WEV Filter
+=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-
+-----------------------------------------------------------------------
+Windows Event Log Filters
+---------------------------------------------------------------------
+analyze the filter
+location:
+/etc/logstash/policy/windows_event_logs/Juarbe_event_logs/
+
+# stop the logstash service
+	service logstash stop
+
+# symbolically link the WEV Filter
+	ln -s <location of filter> /etc/logstash/conf.d
+
+# test config for any errors
+	/opt/logstash/bin/logstash -f /etc/logstash/conf.d/ -v --configtest
+
+# if it returns "CONFIGURATION OK" then start logstash
+	service logstash start
+	service logstash status
+
+# verify the socket/port opened properly
+	netstat -plunt | grep java
+
+# use tcpdump to see if logs are coming in 
+tcpdump -nnvvvi enps03 port 5001
+
+# if they are coming in, go to kibana settings and refresh the index in the settings section
+# go to the discover tab and verify you can see event logs populating
+### I recommend using the Tags filter to ensure you are getting logs and to start building your filters
+
+-----------------------------------------------------------------------
+Windows Event Log in Kibana
+---------------------------------------------------------------------
+Build 1 custom search
+Build 4 visualizations
+Build 1 Dashboard
+

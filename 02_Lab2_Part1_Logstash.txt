@@ -1,0 +1,99 @@
+===--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-=-
+LAB 2 - Setup Logstash with REPO FIles & working with LOGSTASH
+=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+----------------------------------------------------------
+Download Repository of Logstash configuration Files
+----------------------------------------------------------
+** Be advised that this repo is on my github account
+** The contents of this repo were a combination of work done by the following people
+** Jose Ortiz, CPT Benjamin Smith, SFC Bishop, SSG Jeriel Juarbe, & MAJ Alex Bailey
+
+# navigate to the users home dir cd /home/<user>
+	cd /home/user1
+
+# download repo from github
+	git clone https://github.com/jeriel20/logstash.git
+
+# verify contents downloaded successfully
+	ls -l logstash
+
+# copy all the contents from the logstash github folder to /etc/logstash (contents 
+# must be placed in /etc/logstash
+	cp -R logstash/* /etc/logstash/
+
+# now you can delete/remove the folder we downloaded from git from the users home dir
+	rm -rf logstash
+
+---------------------------------------------------------
+Logstash configuration/filter testing and debuging
+---------------------------------------------------------
+# logstash reads config files aplhabetically/numerically from the /etc/logstash/conf.d 
+# directory; so if you have more than 1 .conf make to sure to name them appropriately
+
+# As root go to /etc/logstash
+	cd /etc/lostash/conf.d
+
+# test the config you want you use before turnin on the logstash
+	/opt/logstash/bin/logstash -f /etc/policy/Syslog/3_syslog.conf -v --configtest
+
+# or you can use the debug option if you want to see more details
+	/opt/logstash/bin/logstash -f /etc/policy/Syslog/3_syslog.conf -v --debug
+
+# Once all is good, symbolically link the config you want to the /etc/logstash/conf.d
+	ln -s /etc/logstash/policy/Syslog/3_syslog.conf /etc/logstash/conf.d
+
+# start logstash 
+	systemctl start logstash
+
+# verify it is running
+	systemctl status logstash
+
+# check to ensure logstash opened the socket/port your wanted to open from your config file
+	netstat -plunt | grep java
+
+# if running the firewall dont forget to open the port
+	firewall-cmd  --permanent --zone=public --add-port=5044/tcp
+	firewall-cmd  --permanent --zone=public --add-port=5044/udp
+
+# then reload the firewall
+	firewall-cmd --reload
+
+# to see active zones type
+	firewall-cmd --get-active-zones
+
+# to list the rules
+	firewall-cmd --list-all
+
+# Now make sure all your kibana, elasticsearch, nginx are all running
+
+-----------------------------------------------
+Verify your are receiving logs via tcpdump
+----------------------------------------------
+# Open a termimal and run tcpdump on the port you are listening on 
+	tcpdump -nnvvvi enp8s0 port 5000
+
+# then see if you see packets coming in
+
+# go to kibana and elasticsearch to verify data
+
+------------------------------------
+Working with Logstash
+-----------------------------------
+# build you filters and save them in your /etc/logstash/policy directory
+
+# go to the following website to read the logstash guide to learn how to build filters
+https://www.elastic.co/guide/en/logstash/current/index.html
+
+------------------------------------
+Optimizing Logstash
+-----------------------------------
+#worker threads are allocated for performinfg filters. You can control this setting by adding
+# the "-w" parameter to LS_OPTS in the logstash service file located at /etc/init.d/ on red hat
+# based systems.
+	sudo nano /etc/init.d/logstash
+
+#edit the LS_OPTS section
+	LS_OPTS:"-w<put the number of workers here_the default is one worker>"
+
+#save and exit and restart the service
+	sudo systemctl restart logstash

@@ -1,0 +1,475 @@
+===--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LAB 1 - Installing ELK on CentsOS7/RHEL
+=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-
+
+Mount ISO to DVD/CD Drive and boot
+-------------------------------------------------------
+Configure the Hardware and software options
+------------------------------------------------------
+1) Select Installation Destination and ensure the hard drive is selected
+with a check mark; then select done
+2) select "software selection" and select the follwing packages to install
+	-select development and workstation {
+		select: Additional Devel; devel tools; load balancer; platform devel; python; 
+			then select done
+	-select network host name {
+		-turn on your adapter and select configure; the select manual
+		-change your hostname (at the bottom) to elk
+	-select done and then begin installation
+	-setup root password and create a user
+3) After install go to the top right and edit the settings for the interface to match what your
+assigned IP is that pooled from the static pool in vmware
+
+
+-------------------------------------------------------
+update software
+------------------------------------------------------
+sudo yum -y update && yum -y upgrade
+
+-------------------------------------------------------
+Disable SELinux
+------------------------------------------------------
+# Disable SELlinux to prevent issues. The setup and management of SElinix is beyond the scope
+# of this course
+	sudo nano /etc/selinux/config
+
+# edit the SELinux status
+	SELinux Status:		disabled
+
+#Save Exit and reboot the computer
+
+# When switching from Disabled to either Permissive or Enforcing mode, it is highly recommended that 
+# the system be rebooted and the filesystem relabeled.
+
+The SELinux mode can be viewed and changed by using the SELinux Management GUI tool available on the 
+Administration menu or from the command line by running 'system-config-selinux' (the SELinux Management 
+GUI tool is part of the policycoreutils-gui package and is not installed by default)
+
+
+-------------------------------------------------------------------------------
+Install Extra Packages for Enterprise Linux (EPEL) repo to install Terminator
+--------------------------------------------------------------------------------
+#If you want to use Terminator follow these instructions
+	yum install epel-release
+	yum update
+
+# install Nux-Desktop Repo
+	wget http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-1.el7.nux.noarch.rpm
+	rpm -Uvh nux-dextop-release-0-1.el7.nux.noarch.rpm
+	yum update
+	yum install terminator
+---------------------------------------
+Install Geany
+---------------------------------------
+# install geany
+	sudo yum -y install geany
+
+---------------------------------------
+stop and disable the Firewall for now
+---------------------------------------
+# Check the status of the firewall
+	sudo systemctl status firewalld
+
+# Stop the firewall service
+	sudo systemctl stop firewalld
+
+# Check the status to make sure it stopped
+	sudo systemctl status firewalld
+
+# Disable the firewall
+	systemctl disable firewalld
+
+# WHen you are done building ELK and want to harden the box enable & configure the firewall
+	sudo systemctl enable firewalld
+	sudo systemctl start firewalld
+	sudo firewall-cmd --permanent etc etc etc 
+-------------------------------------------------------
+Install Java (Elasticsearch and logstash require java)
+-------------------------------------------------------
+#change to your users home dir **NOT root home dir**
+	cd ~
+	wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u65-b17/jdk-8u65-linux-x64.rpm"
+	sudo yum localinstall jdk-8u65-linux-x64.rpm
+
+# Now Java should be installed at /usr/java/jdk1.8.0_65/jre/bin/java,
+# and linked from /usr/bin/java.
+
+# Delete the archive file you just downloaded
+	rm ~/jdk-8u65-linux-x64.rpm
+
+--------------------------
+Install Elasticsearch
+--------------------------
+# import the Elasticsearch public GPG key into rpm
+	sudo rpm --import http://packages.elastic.co/GPG-KEY-elasticsearch
+
+# Create and edit a new yum repository file for Elasticsearch:
+	sudo nano /etc/yum.repos.d/elasticsearch.repo
+
+# Add the following repository configuration:
+[elasticsearch-2.1]
+name=Elasticsearch repository for 2.x packages
+baseurl=http://packages.elastic.co/elasticsearch/2.x/centos
+gpgcheck=1
+gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+
+#SAVE & EXIT then Install Elasticsearch with this command:
+	sudo yum -y install elasticsearch
+
+# Enable Elasticsearch to start at bootup
+	sudo systemctl daemon-reload
+	sudo systemctl enable elasticsearch.service
+
+# Start Elasticsearch
+	sudo systemctl start elasticsearch
+
+# Now follow my configuration section for elasticsearch (next step)
+
+------------------------------------------------------------------------------------------------------
+Configuring ElasticSearch - Post install (if you are going to cluster there are more steps that this)
+-------------------------------------------------------------------------------------------------------
+# open Elasticsearch.yml located at /etc/elasticsearch/ with an editor as root
+	nano /etc/elasticsearch/elasticsearch.yml
+
+# UNcomment network.host, http.port, and bootstrap.mlockall, and fill out as approriate. Example below
+	bootstrap.mlockall: true
+	network.host: localhost
+	http.port: 9200
+
+# Save and Exit
+
+# Optimize Elasticsearch's use of RAM by doing the following:
+# open /etc/sysconfig/elasticsearch with an editor as root and make these changes
+	nano /etc/sysconfig/elsticsearch
+	
+# UNcomment the ES_HEAP_SIZE and set this value to 50% of the available ram on you server
+# you can type free -m on the commang line to see how much RAM you got example:
+	ES_HEAP_SIZE=1g
+
+# UNcomment MAX_LOCKED-MEMORY & MAX_OPEN_FILES=65535, it should look like this
+	MAX_LOCKED_MEMORY=unlimited
+	MAX_OPEN_FILES=65535
+
+# SAVE and EXIT
+
+# now open /usr/lib/systemd/system/elasticsearch.service in you favorite editor
+	nano /usr/lib/systemd/system/elasticsearch.service
+
+# Uncomment the LimitMEMLOCK, should look like below:
+	LimitMEMLOCK=infinity
+
+# Uncomment the LimitNOFILE, should look like below:
+	LimitNOFILE=65535
+
+# SAVE and EXIT
+
+# reload the daemon
+	systemctl daemon-reload
+
+# restart Elasticsearch
+	systemctl restart elasticsearch.service
+
+# Important to note here that there are additional changes to make if you are clustering multiple
+# nodes (servers).
+
+--------------------------------------------------------------------
+Installing Elasticsearch HQ plugin
+--------------------------------------------------------------------
+#Navigating to your elasticsearch/bin directory and using the appropriate release tag
+ or the master branch for ES 2.x users:
+	cd /usr/share/elasticsearch/bin
+
+#run this command to install the HQ plugin
+	./plugin install royrusso/elasticsearch-HQ
+
+#restart Elasticsearch
+	systemctl restart elasticsearch
+
+#test to see if you can access the plugin
+	http://localhost:9200/_plugin/hq
+
+
+
+---------------------------------
+Install Kibana using REPO
+----------------------------------
+# Download and install the public signing key:
+	rpm --import https://packages.elastic.co/GPG-KEY-elasticsearch
+
+# Create a file named kibana.repo in the /etc/yum.repos.d/ directory with the following contents:
+	[kibana-4.x]
+	name=Kibana repository for 4.4.x packages
+	baseurl=http://packages.elastic.co/kibana/4.4/centos
+	gpgcheck=1
+	gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch
+	enabled=1
+
+# Install Kibana by running the following command:
+	yum install kibana
+
+# Configure Kibana to automatically start during bootup. If your distribution is using
+# the System V version of init, run the following command:
+	chkconfig --add kibana
+
+# If your distribution is using systemd, run the following commands instead:
+	sudo /bin/systemctl daemon-reload
+	sudo /bin/systemctl enable kibana.service
+
+#Now proceed to the post install configuration section below
+
+---------------------------------
+Install Kibana using tar ball
+----------------------------------
+#Before installing Kibana, set up a kibana user and group, 
+# which will own and run Kibana:
+	sudo groupadd -g 1005 kibana
+	sudo useradd -u 1005 -g 1005 kibana
+
+# download kibana to the main users home directory
+	cd ~; wget https://download.elastic.co/kibana/kibana/kibana-4.4.0-linux-x64.tar.gz
+
+# Extract the tar ball
+	tar -xvf kibana-*.tar.gz
+
+# delete the Tar ball (DO NOT Delete the wrong file)
+	rm -rf kibana-4.4.0-linux-x64.tar.gz
+
+# Create a kibana directory within /opt
+	sudo mkdir -p /opt/kibana
+
+# Now copy the Kibana files into your newly-created directory:
+	sudo cp -R ~/kibana-4*/* /opt/kibana/
+
+#Make the kibana user the owner of the files:
+	sudo chown -R kibana: /opt/kibana
+
+# We want Kibana to run as a service. Download a Kibana init script with these commands:
+	sudo cd /etc/init.d && sudo curl -o kibana https://gist.githubusercontent.com/thisismitch/8b15ac909aed214ad04a/raw/fc5025c3fc499ad8262aff34ba7fde8c87ead7c0/kibana-4.x-init
+	sudo cd /etc/default && sudo curl -o kibana https://gist.githubusercontent.com/thisismitch/8b15ac909aed214ad04a/raw/fc5025c3fc499ad8262aff34ba7fde8c87ead7c0/kibana-4.x-default
+
+#Now enable the Kibana service, and start it:
+	sudo chmod +x /etc/init.d/kibana
+	sudo service kibana start
+	sudo chkconfig kibana on
+
+#Now proceed to the post install configuration section below
+
+---------------------------------------
+Configuring Kibana - Post install
+---------------------------------------
+# open kibana.yml with your favorite editor
+	nano /opt/kibana/config/kibana.yml
+
+# UNcomment server.host, server.port, elasticsearch.url, and the kibana_index
+	server.port: 5601
+	server.host: "localhost"
+	elasticsearch.url: "http://localhost:9200"
+	kibana.index: ".kibana"
+
+# SAVE & EXIT
+
+# Restart kibana
+	service restart kibana
+
+# if using systemd
+	systemctl restart kibana
+
+# Test kibana 
+	localhost:5601
+
+# We can now access it locally but, we have to set up a reverse proxy to allow others to 
+# use and view kibana
+# we will use nginx as the reverse proxy and use ssl with authentication. 
+***We will install nginx, build the SSL for kibana, mofidy the firewall,
+***and then configure Nginx, 
+
+---------------------------------
+Install NGINX (Proxy) Part 1 of 2
+----------------------------------
+# Install Repo for nginx
+	yum -y install epel-release
+
+# Install nginx and httpd-tools
+
+	yum -y install nginx httpd-tools
+
+----------------------------------------------------------------------
+Configuring Kibana to use SSL [need to create SSL KEY, CSR, and CRT]
+----------------------------------------------------------------------
+#Create SSL directory in /etc/nginx
+	cd /etc/nginx
+	mkdir ssl
+
+# create you key inside of the ssl directory
+	cd ssl
+	openssl genrsa 1024 > kibana.key
+
+#Create a CSR using your key
+	openssl req -new -key ./kibana.key > kibana.csr
+
+# Make sure to fill out info BUT especially
+# make sure that under the "Common Name"you type 
+# in you IP address or FQDN don't mess this up
+
+# Create your certificate using your CSR and sign with your key
+	Openssl x509 -in kibana.csr -out kibana.crt -req -signkey kibana.key -days 365
+
+#create user or multiple users to access kibana with username and password
+	htpasswd -c /etc/nginx/htpasswd.users admin 
+
+------------------------------------
+Install NGINX (Proxy) Part 2 of 2
+-----------------------------------
+#Adjust the firewall to allow for access to kibana over https (whenever you enable the firewall again)
+	firewall-cmd --permanent --zone=public --add-service=http
+	firewall-cmd --permanent --zone=public --add-service=https
+
+# Edit the nginx.conf file.....Delete the default server function in the 
+# nginx.conf that is located in the /etc/nginx directory. then save.
+# the server fucntion starts with:
+	server {
+
+# create a file called kibana.conf in the /etc/nginx/conf.d
+	cd /etc/nginx/conf.d
+	nano kibana.conf
+#######FOR HTTPS SETUP CONTINUE HERE, BUT FOR HTTP GO TO FURTHER DOWN
+# add the following in to the kibana.conf file using geany or any text editor
+server {
+listen	80;
+server_name	yourIPorFQDNgoeshere;
+return 301 https://server_name$request_uri;
+}
+
+server {
+listen	*:443;
+ssl on;
+ssl_certificate	put_the_FullPathofWhereyou.CRTisExample /etc/nginx/ssl/kibana.crt;
+ssl_certificate_key	putHerertheFullPathofWhereyou.keyis_for_Example /etc/nginx/ssl/kibana.key;
+server_name	yourIPorFQDNgoeshere;
+access_log	/var/log/nginx/kibana.access.log;
+error_log	/var/log/nginx/kibana.error.log;
+
+location / {
+auth_basic	"Restricted";
+auth_basic_user_file	/etc/nginx/htpasswd.users;
+proxy_pass http://localhost:5601;
+}
+}
+
+#start nginx
+	systemctl start nginx
+
+#enable to start at boot up
+	systemctl enable nginx
+
+#if SELinux is not disabled run this command
+	sudo setsebool -P httpd_can_network_connect 1
+
+# now lets test an HTTPS connection with authentication
+	
+#######THIS IS FOR HTTP SETUP
+#create a kibanahttp.conf
+	cd /etc/nginx/conf.d/
+	nano kibana_http.conf
+	
+# put the following into the file
+server {
+	listen 80;
+	server_name 192.168.1.92;
+	
+	location / {
+		proxy_pass http://localhost:5601;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection 'upgrade';
+		proxy_set_header Host $host;
+		proxy_cache_bypass $http_upgrade;
+		}
+}
+# save and exit
+
+#start nginx
+	systemctl start nginx
+
+#enable to start at boot up
+	systemctl enable nginx
+
+#if SELinux is not disabled run this command
+	sudo setsebool -P httpd_can_network_connect 1
+
+
+---------------------------------------
+Install Logstash
+---------------------------------------
+#Create new YUM repo for Logstash
+	cd /etc/yum.repos.d/
+	nano logstash.repo
+
+#enter the following information into the file you just created and then save and exit
+[logstash-2.2]
+name=logstash repository for 2.2.x packages
+baseurl=http://packages.elasticsearch.org/logstash/2.2/centos
+gpgcheck=1
+gpgkey=http://packages.elasticsearch.org/GPG-KEY-elasticsearch
+enabled=1
+
+#Now install logstash
+	yum -y install logstash
+
+# enable logstash
+	chkconfig logstash on
+
+#Logstash is now installed but not configured yet
+
+#now install the plugin for translate: this is for bro_http Log
+	cd /opt/logstash/bin
+	./plugin install logstash-filter-translate
+
+--------------------------------------------------------------
+Install Curator for Elasticsearch Data Management Part 1 of 2
+-------------------------------------------------------------
+#Download the public signing key
+	rpm --import https://packages.elastic.co/GPG-KEY-elasticsearch
+
+
+# Install Python Public tools
+	yum install python-setuptools
+
+#Create new YUM repo for Curator
+	cd /etc/yum.repos.d/
+	touch curator.repo
+	nano curator.repo
+
+#enter the following information into the file you just created and then save and exit
+[curator-3]
+name=CentOS/RHEL 7 repository for Elasticsearch Curator 3.x packages
+baseurl=http://packages.elastic.co/curator/3/centos/7
+gpgcheck=1
+gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+
+#now install elasticsearch curator
+	yum install python-elasticsearch-curator
+
+#verify your version of curator
+	curator --version
+
+# Go to this webpage to learn how to use curator
+https://www.elastic.co/guide/en/elasticsearch/client/curator/current/examples.html
+
+# curator is used to manage the elasticsearch database. It manages when, what, where to delete
+# indexes based on time, disk space, etc.
+
+# Example 1: shows indices with timestrings
+	curator --host 10.0.0.2 show indices --timestring '%Y.%m.%d'
+
+# Example 2: delete all indices older than 30 days
+	curator --host 10.0.0.2 delete indices --older-than 30 --time-unit days \ --timestring '%Y.%m.%d'
+
+
+
+----------------------------------------------------------------
+Installing other random software
+-----------------------------------------------------------------
+yum install wireshark-gnome

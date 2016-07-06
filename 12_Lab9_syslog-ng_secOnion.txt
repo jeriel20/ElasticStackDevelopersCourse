@@ -1,0 +1,50 @@
+===--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LAB 9 - SYSLOG-NG from SECONION
+=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-
+-------------------------------------------------------
+Pushing BRO LOGS and SYSLOG from Security Onion
+-------------------------------------------------------
+#open the syslog-ng.conf using leafpad
+	sudo leafpad /etc/syslog-ng/syslog-ng.conf
+
+#toward the middle of the file there is a destination function
+#create a new destination function
+	destination d_elk {udp("IPAddressOfELK"port(LogstashPortUConfigured)); };
+
+#towards the middle of the File there is a log function that looks like this:
+# log {
+	source(s_bro_conn);
+	source(s_bro_http);
+	log { destination(d_elsa); }
+	etc....
+
+#copy the entire fucntion and paste above or below the existing log function
+#delete the following from the one that you just copied
+	rewrite(r_host);
+	rewrite(r_cisco_program);
+	rewrite(r_snares);
+	rewrite(r_from_pipes0;
+	rewrite(r_pipes);
+	parser(p_db);
+	log { filter(f_bro_headers); flags(final); };
+
+#add your function name in the log { destination section of the log function
+	log { destination(d_elk); } ;
+
+# this basically takes all the variables and functions that SO sends Bro logs to ELSA
+# and sents it to your ELK server
+
+# save and exit
+
+#Restart syslog-ng. If you get anything other than OK and OK then you made a mistake. Fix it
+#You can ignore the duplicate parser message
+	sudo service syslog-ng restart
+
+#run tcpdump to verify your onion is sending the logs out
+	tcpdump -nnvvv -i eth0 port 5514
+
+********Lets generate some LOGS!!
+-------------------------------------------------------
+Using TCPreplay to replay PCAPS
+-------------------------------------------------------
+sudo tcpreplay -i eth1 -M10 /opt/samples/markofu/*

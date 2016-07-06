@@ -1,0 +1,7 @@
+===--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LAB 10 - Visualize BRO LOGS in Kibana
+=-=-=-=-=-=-=-=-=-=--=-=--=-=-=-=-=-=-=-
+Build 4 search discovery Filters
+BUild 4 visualizations
+Build 2 Dashboards
+
