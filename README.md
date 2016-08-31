@@ -7,7 +7,7 @@ In addition, the labs are mainly designed to teach students how to:
   
   -Send BRO logs from Security Onion to ELK
   
-  -Build custom configuration files using GROK and lcoal machine log file
+  -Build custom configuration files for Logstash
   
   ** The Notes are not perfect. The instructions in this repo are best suited for Intermediate Linux Users.
   
